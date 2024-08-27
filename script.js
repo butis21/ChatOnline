@@ -1,8 +1,15 @@
 let activeChatId = 'Чат 1'; // Переменная для отслеживания текущего активного чата
 let chatCounter = 1; // Счетчик для генерации уникальных идентификаторов
+const validPromoCodes = ["PROMO2024", "DISCOUNT50", "FREEACCESS"]; // Пример списка промокодов
 
 document.getElementById('sendButton').addEventListener('click', () => sendMessage());
 
+document.getElementById('applyPromoCodeButton').addEventListener('click', applyPromoCode);
+// Проверка подписки при старте
+let hasSubscription = JSON.parse(localStorage.getItem('hasSubscription')) || false;
+updateChatStatus();
+
+// Функция отправки сообщений
 // Функция отправки сообщений
 async function sendMessage(retryMessage = null) {
     const userInput = document.getElementById('userInput');
@@ -25,7 +32,6 @@ async function sendMessage(retryMessage = null) {
         let lastBotMessageDiv = null;
         let previousMessage = message;
 
-        // Если это продолжение ответа, используем только последний ответ
         if (retryMessage) {
             lastBotMessageDiv = document.querySelector('.chatbox .message.bot:last-child');
             lastBotMessageDiv.classList.add('loading');
@@ -83,13 +89,13 @@ async function sendMessage(retryMessage = null) {
 
             // Если бот все равно вернул пустое сообщение, показываем ошибку
             if (botMessage.trim() === "") {
-                addMessageToChat("Error: Бот не смог предоставить ответ.", "error");
+                addMessageToChat("Error: Бот не смог предоставить ответ. Задайте вопрос повторно перефразировав", "error");
                 return;
             }
 
             if (retryMessage) {
                 const lastBotMessageText = lastBotMessageDiv.querySelector('p');
-                const combinedMessage = formatBotMessage(lastBotMessageText.innerHTML + ' ' + botMessage);
+                const combinedMessage = formatBotMessage(lastBotMessageText.innerHTML.trim() + botMessage.trim());
                 lastBotMessageText.innerHTML = combinedMessage;
 
                 // Сохраняем объединенный текст
@@ -98,7 +104,7 @@ async function sendMessage(retryMessage = null) {
                 // Убираем затемнение и анимацию после обновления текста
                 lastBotMessageDiv.classList.remove('loading');
             } else {
-                addMessageToChat(botMessage, "bot", true, true); // Передаем параметр для добавления кнопки "Продолжить"
+                addMessageToChat(botMessage, "bot", true, true); // Кнопка "Продолжить" будет добавлена всегда
             }
         } catch (error) {
             // Удаляем сообщение "Загрузка ответа..." в случае ошибки
@@ -119,20 +125,28 @@ async function sendMessage(retryMessage = null) {
     }
 }
 
-document.getElementById('clearChatButton').addEventListener('click', clearChat);
 
-function clearChat() {
-    const confirmation = confirm("Вы уверены, что хотите стереть все сообщения?");
-    if (confirmation) {
-        const chatbox = document.getElementById('chatbox');
-        chatbox.innerHTML = ''; // Очищаем содержимое чата
+function applyPromoCode() {
+    const promoCodeInput = document.getElementById('promoCodeInput').value.trim();
+    const promoStatus = document.getElementById('promoStatus');
 
-        // Очищаем сообщения из localStorage для текущего активного чата
-        const chats = JSON.parse(localStorage.getItem('chats')) || {};
-        if (chats[activeChatId]) {
-            chats[activeChatId] = [];
-            localStorage.setItem('chats', JSON.stringify(chats));
-        }
+    if (validPromoCodes.includes(promoCodeInput)) {
+        hasSubscription = true;
+        localStorage.setItem('hasSubscription', true);
+        promoStatus.textContent = "Подписка успешно активирована!";
+        updateChatStatus();
+    } else {
+        promoStatus.textContent = "Неверный промокод. Попробуйте снова.";
+    }
+}
+
+// Обновление статуса активного чата
+function updateChatStatus() {
+    const headerElement = document.querySelector('.headersub');
+    if (hasSubscription) {
+        headerElement.textContent = "(Активно)";
+    } else {
+        headerElement.textContent = "(Оформите подписку)";
     }
 }
 
@@ -174,6 +188,7 @@ let codeBlocks = [];
 function formatBotMessage(message) {
     codeBlocks = []; // Очищаем массив перед каждым новым сообщением
 
+    // Обработка многострочных блоков кода, заключенных в тройные обратные кавычки
     message = message.replace(/```(.*?)\n([\s\S]*?)```/g, function(match, p1, p2) {
         const codeIndex = codeBlocks.length; // Определяем текущий индекс кода
         codeBlocks.push(p2.trim()); // Сохраняем код в массиве
@@ -187,11 +202,26 @@ function formatBotMessage(message) {
                 </div>`;
     });
 
-    message = message.replace(/`([^`]+)`/g, '<code>$1</code>');
+    // Обработка однострочного кода, заключенного в двойные обратные кавычки
+    message = message.replace(/``([^`]+)``/g, '<code>$1</code>');
+
+    // Преобразование строк, начинающихся с "##", в пункты списка
+    message = message.replace(/^##\s*(.*)$/gm, '<li>$1</li>');
+
+    // Обработка жирного текста
     message = message.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // Обработка текста в курсива (заключенного в одинарные звездочки)
+    message = message.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+    // Если найдены пункты списка, оборачиваем их в <ul>
+    if (message.includes('<li>')) {
+        message = message.replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>');
+    }
 
     return message;
 }
+
 
 // Функция для экранирования обратных кавычек в строке
 function escapeBackticks(str) {
@@ -233,12 +263,22 @@ function addMessageToChat(text, sender, save = true, addContinueButton = false) 
         continueButton.textContent = 'Продолжить...';
         continueButton.className = 'continue-button';
         continueButton.addEventListener('click', function() {
-            sendMessage(text); // Повторный запрос на основе предыдущего ответа
+            if (!hasSubscription) {
+                showModal('helpModal');
+            } else {
+                sendMessage(text);
+            }
         });
         messageDiv.appendChild(continueButton);
     }
 
     chatbox.appendChild(messageDiv);
+
+    // Используем setTimeout для того, чтобы анимация сработала после добавления в DOM
+    setTimeout(() => {
+        messageDiv.classList.add('show');
+    }, 10);
+
     chatbox.scrollTop = chatbox.scrollHeight; // Скролл к последнему сообщению
 
     // Сохраняем сообщение в localStorage
@@ -254,6 +294,16 @@ function addMessageToChat(text, sender, save = true, addContinueButton = false) 
     return messageDiv;
 }
 
+document.getElementById('clearAllDataButton').addEventListener('click', clearAllData); // Кнопка очистки всех данных
+
+function clearAllData() {
+    const confirmation = confirm("Вы уверены, что хотите удалить все данные?");
+    if (confirmation) {
+        localStorage.clear(); // Удаляем все данные из localStorage
+        location.reload(); // Перезагружаем страницу, чтобы обновить состояние
+    }
+}
+
 // Функционал переключения темы
 document.getElementById('themeToggle').addEventListener('click', function() {
     const body = document.body;
@@ -261,11 +311,11 @@ document.getElementById('themeToggle').addEventListener('click', function() {
     if (body.classList.contains('dark-mode')) {
         body.classList.remove('dark-mode');
         body.classList.add('light-mode');
-        themeToggleBtn.textContent = 'Switch to Dark Mode';
+        themeToggleBtn.textContent = 'Переключить на темную тему';
     } else {
         body.classList.remove('light-mode');
         body.classList.add('dark-mode');
-        themeToggleBtn.textContent = 'Switch to Light Mode';
+        themeToggleBtn.textContent = 'Переключить на светлую тему';
     }
 });
 
@@ -346,6 +396,7 @@ document.getElementById('chatList').addEventListener('contextmenu', function(eve
 
 // Функция загрузки чатов при старте
 function loadChats() {
+    updateChatStatus();
     const chats = JSON.parse(localStorage.getItem('chats')) || {};
     const chatList = document.getElementById('chatList');
     chatList.innerHTML = '';
@@ -416,3 +467,11 @@ function botIconSVG() {
 
 // Загрузка чатов при старте
 document.addEventListener('DOMContentLoaded', loadChats);
+
+// Дополнительные функции для модального окна и промокода
+function showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    modal.style.display = "block";
+}
+
+

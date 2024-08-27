@@ -213,6 +213,18 @@ body {
     margin-bottom: 15px;
 }
 
+.message {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.message.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
 .message svg {
     width: 30px;
     height: 30px;
@@ -372,96 +384,70 @@ pre {
 */
 
 /* Мобильная адаптация */
+/* Мобильная адаптация */
 @media (max-width: 768px) {
+    .input-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        padding: 10px;
+        background-color: inherit;
+        border-top: 1px solid #ddd;
+        z-index: 10000;
+    }
 
-/* Основные стили для контейнера ввода текста */
-.input-container {
-    position: fixed; /* Закрепляем панель */
-    bottom: 0; /* Прикрепляем панель к нижней части экрана */
-    left: 0;
-    right: 0;
-    display: flex;
-    padding: 10px;
-    background-color: inherit;
-    border-top: 1px solid #ddd;
-    z-index: 10000; /* Убедитесь, что панель отображается поверх всех других элементов */
-}
-
-/* Убедитесь, что контейнер чата учитывает фиксированную высоту ввода */
-.chatbox {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    background-color: inherit;
-    color: inherit;
-    margin-bottom: 60px; /* Отступ снизу, чтобы не перекрывать сообщения панелью ввода */
-    box-sizing: border-box; /* Учитываем отступы при расчете размеров */
-    z-index: 1; /* Убедитесь, что чат находится ниже по слоям */
-}
-
-/* Стили для текстового поля */
-#userInput {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    margin-right: 10px;
-    background-color: inherit;
-    color: inherit;
-    z-index: 10001; /* Убедитесь, что поле ввода находится выше других элементов */
-}
-
-/* Стили для кнопки отправки */
-#sendButton {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    z-index: 10001; /* Убедитесь, что кнопка отправки находится выше других элементов */
-}
-
-#sendButton:hover {
-    background-color: #0056b3;
-}
-
-    
-    .container {
-        flex-direction: column; /* Вертикальная ориентация для мобильных устройств */
+    .help-button {
+        position: fixed; /* Закрепляем кнопку помощи */
+        bottom: 80px; /* Располагаем выше панели ввода */
+        right: 20px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: inherit;
+        padding: 5px;
+        z-index: 10002; /* Кнопка помощи выше панели ввода */
     }
 
     .chatbox {
         flex: 1;
         padding: 20px;
-        overflow-y: auto; /* Добавляем поддержку вертикальной прокрутки */
+        overflow-y: auto;
         background-color: inherit;
         color: inherit;
-        scroll-behavior: smooth; /* Плавная прокрутка */
+        margin-bottom: 60px;
+        box-sizing: border-box;
+        z-index: 1;
     }
-    
-    /* Отключаем перезагрузку страницы при прокрутке вверх */
-    body, html {
-        overflow: hidden; /* Отключаем прокрутку на уровне всей страницы */
-    }
-    
+
     .container {
-        overflow-y: auto; /* Включаем прокрутку в контейнере */
-        max-height: 100vh; /* Ограничиваем высоту контейнера высотой окна */
+        flex-direction: column;
     }
-    
+
+    body, html {
+        overflow: hidden;
+    }
+
+    .container {
+        overflow-y: auto;
+        max-height: 100vh;
+    }
+
+    .input-container {
+        background-color: #000000;
+    }
 
     .sidebar {
-        display: none; /* По умолчанию скрываем sidebar */
+        display: none;
     }
 
     .chat-section {
-        order: 1; /* Чат на первом месте */
+        order: 1;
     }
 
     .sidebar.collapsed {
-        display: block; /* Отображаем sidebar при клике на кнопку показа */
+        display: block;
         position: absolute;
         width: 100%;
         height: 100%;
@@ -469,7 +455,7 @@ pre {
     }
 
     .chat-section.expanded {
-        flex: 1; /* Чат занимает всю доступную ширину */
+        flex: 1;
     }
 }
 

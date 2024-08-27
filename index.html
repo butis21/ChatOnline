@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Interface</title>
+    <title>ChatGPT Online</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="dark-mode">
@@ -20,8 +20,11 @@
         </div>
         <div class="chat-section">
             <div class="header">
-                <h1>Активный чат</h1>
-                <button id="themeToggle" class="theme-toggle">Switch to Light Mode</button>
+                <h1>ChatGPT онлайн</h1>
+                <div class="headersub">
+
+                </div>
+                <button id="themeToggle" class="theme-toggle">Переключить на светлую тему</button>
             </div>
             <div id="chatbox" class="chatbox">
                 <!-- Сообщения будут добавляться сюда -->
@@ -37,8 +40,14 @@
         <div id="helpModal" class="modal">
             <div class="modal-content">
                 <span class="close">&times;</span>
-                <p>Этот чатбот предназначен для простого общения. Учитывайте, пожалуйста, что данный чатбот не умеет вести осознанный и длительный диалог. Максимально символов в ответе - 500. <br> При нажатии на ответ бота правой кнопкой мыши - ответ будет продолжен новым ответом.</p>
+                <p>Этот чатбот предназначен для простого общения. Учитывайте, пожалуйста, что данный чатбот не умеет вести осознанный и длительный диалог. Максимально символов в одиночном ответе - 500. <br></p>
+                <p><br>Обновления от 27 августа: <br> Анимация появления ответов, улучшение модели ответов, улучшенный дизайн на телефонах, полная русификация сайта, добавлена подписка. Попробуйте: FREEACCESS</p>
+                <p>Введите промокод для активации подписки:</p>
+                <input type="text" id="promoCodeInput" placeholder="Введите промокод" />
+                <button id="applyPromoCodeButton">Активировать</button>
+                <p id="promoStatus"></p>
                 <button id="clearChatButton">Стереть все сообщения</button>
+                <button id="clearAllDataButton">Стереть все данные</button>
             </div>
         </div>
     </div>
